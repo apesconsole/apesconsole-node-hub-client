@@ -13,10 +13,10 @@ var mqtt = require('mqtt');
 var mqtt_url = url.parse('tcp://m13.cloudmqtt.com:16786');
 
 var Gpio = require('onoff').Gpio;
-var sensor = new Gpio(7, 'in');
-var lamp   = new Gpio(8, 'out');
-var led2   = new Gpio(0, 'out');
-var led2   = new Gpio(2, 'out');
+var sensor = new Gpio(23, 'in');
+var lamp   = new Gpio(17, 'out');
+var led2   = new Gpio(4, 'out');
+var led2   = new Gpio(27, 'out');
 
 // Create a client connection
 var client = mqtt.connect(mqtt_url , {
@@ -100,7 +100,7 @@ router.get("/shut", function(req,res){
 	res.sendFile(path + "index.html");
 });
 
-http.listen(process.env.PORT || 3002, () => {				
+http.listen(process.env.PORT || 3002, function(){				
 	logger.log('##################################################');
 	logger.log('        Ape\'s Console - NODE - CLIENT ');
 	logger.log('        Process Port :' + process.env.PORT);
