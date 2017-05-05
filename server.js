@@ -14,6 +14,7 @@ var mqtt_url = url.parse('tcp://m13.cloudmqtt.com:16786');
 
 var Gpio = require('onoff').Gpio;
 var sensor = new Gpio(23, 'in');
+var pump   = new Gpio(18, 'in');
 var lamp   = new Gpio(17, 'out');
 var led2   = new Gpio(4, 'out');
 var led2   = new Gpio(27, 'out');
@@ -32,8 +33,7 @@ var globalRoomData = [
 	{ title: 'Hall', id: 1, icon: 'hall', deviceList: [
 		{ title: 'Lamp', id: 'hall-light1' , status: false},
 		{ title: 'AC', id: 'random-1' , status: false},
-		{ title: 'Music', id: 'random-2' , status: false},
-		{ title: 'Garden', id: 'sensor-status' , status: false}
+		{ title: 'Music', id: 'random-2' , status: false}
 	]},
 	{ title: 'Master Room', id: 2, icon: 'master', deviceList: [
 		{ title: 'Light', id: 'mstrm-light1' , status: false},
@@ -42,12 +42,17 @@ var globalRoomData = [
 	]},
 	{ title: 'Guest Room', id: 3, icon: 'guest', deviceList: [
 		{ title: 'Light', id: 'gstrm-light1' , status: false}						
+	]},
+	{ title: 'Garden', id: 1, icon: 'garden', deviceList: [
+		{ title: 'Soil', id: 'sensor-status' , status: false},
+		{ title: 'Sprinkler', id: 'water-pump' , status: false}
 	]}
 ];
 
 var toggleDevice = function(deviceId){
 	switch(deviceId){
 		case 'sensor-status': ''; return false;
+		case   'hall-light1': lamp.writeSync(lamp.readSync() ^ 1); return lamp.readSync() == 0 ? false : true;
 		case   'hall-light1': lamp.writeSync(lamp.readSync() ^ 1); return lamp.readSync() == 0 ? false : true;
 		case  'mstrm-light1': led1.writeSync(led1.readSync() ^ 1); return led1.readSync() == 0 ? false : true;
 		case  'gstrm-light1': led2.writeSync(led2.readSync() ^ 1); return led2.readSync() == 0 ? false : true;
