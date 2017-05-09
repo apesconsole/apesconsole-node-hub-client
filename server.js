@@ -120,24 +120,25 @@ var pollSensor = function(){
 	if(previousMoistureRead != moistureReading && client != null){
 		//Change in state detected. Inform HUB
 		previousMoistureRead = moistureReading;
-		previousTemperatureRead = temperatureReading;
 		//Send Sensor Feed Back to HUB
 		publishData(
 			'{"roomId": "' 
-			+ deviceState.roomId + '", "deviceId": "garden-sensor", "status": ' 
-			+ moistureReading + ', "temperature" : "' 
-			+ temperatureReading + '"}'		
+			+ deviceState.roomId + '", "deviceId": "moisture-sensor", "status": "' 
+			+ moistureReading + '", "value" : "' 
+			+ moistureReading ? 'Optimal' : 'Critical' 
+			+ '", "color": "' 
+			+ moistureReading ? 'green' : 'red' + '"}'		
 		);
-	} else if(previousTemperatureRead != temperatureReading && client != null){
+	} 
+	if(previousTemperatureRead != temperatureReading && client != null){
 		//Change in state detected. Inform HUB
-		previousMoistureRead = moistureReading;
 		previousTemperatureRead = temperatureReading;
 		//Send Sensor Feed Back to HUB
 		publishData(
 			'{"roomId": "' 
-			+ deviceState.roomId + '", "deviceId": "garden-sensor", "status": ' 
-			+ moistureReading + ', "temperature" : "' 
-			+ temperatureReading + '"}'		
+			+ deviceState.roomId + '", "deviceId": "temperature-sensor", "status": ' 
+			+ temperatureReading + ', "value" : "' 
+			+ temperatureReading + '", "color" : "calm"}'		
 		);
 	}
 }
