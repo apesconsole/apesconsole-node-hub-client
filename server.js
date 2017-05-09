@@ -10,7 +10,7 @@ var logger = require("logging_component");
 var url = require("url");
 var mqtt = require('mqtt');
 
-var mqtt_url = url.parse('tcp://localhost:12345');
+var mqtt_url = url.parse('tcp://m13.cloudmqtt.com:16786');
 
 /* PIN SET UP */
 var rpio = require('rpio');
@@ -19,7 +19,8 @@ var options = {
         mapping: 'physical',    /* Use the P1-P40 numbering scheme */
 }
 
-var sensor = 16;
+var moisturesensor    = 16;
+var temperaturesensor = 00;
 var pump   = 15;
 var lamp   = 13;
 var led1   = 33;
@@ -27,8 +28,11 @@ var led2   = 37;
 
 rpio.init([options]);
 
-rpio.open(sensor, rpio.INPUT);
-logger.log('Sensor Set');
+rpio.open(moisturesensor, rpio.INPUT);
+logger.log('Moisture Sensor Set');
+rpio.open(temperaturesensor, rpio.INPUT);
+logger.log('Temperature Sensor Set');
+
 rpio.open(pump, rpio.OUTPUT, rpio.HIGH);
 logger.log('Pump Set');
 rpio.open(lamp, rpio.OUTPUT, rpio.HIGH);
@@ -85,6 +89,13 @@ var toggleDevice = function(deviceId){
 	return false;
 }
 
+var publishData = function(message){
+	client.publish(
+		'T_APESCONSOLE_RD', 
+		message
+	);
+}
+
 var respond = function(message){
 	var triggerMessage = JSON.parse( message.toString());
 	var currentState = toggleDevice(triggerMessage.deviceId);
@@ -92,25 +103,41 @@ var respond = function(message){
 	//Prevent state update if request and GPIO state are both same
 	if(client != null triggerMessage.status != currentState){
 		//Send Device Feed Back to HUB
-		client.publish(
-			'T_APESCONSOLE_RD', 
+		publishData(
 			'{"roomId": "' + triggerMessage.roomId + '", "deviceId": "' + triggerMessage.deviceId + '", "status": ' + currentState + '}'
 		);
 	}		
 }
 
-var previousRead = null; 
+var previousMoistureRead = null; 
+var previousTemperatureRead = null; 
 var pollSensor = function(){
-	var reading = rpio.read(sensor);
-	logger.log('Sensor Reading: ' + reading);
+	var moistureReading = rpio.read(moisturesensor);
+	var temperatureReading = rpio.read(temperaturesensor);
+	logger.log('Moisture Sensor Reading    : ' + moistureReading);
+	logger.log('Temperature Sensor Reading : ' + temperatureReading);
 	//Prevent state update every poll
-	if(previousRead != reading && client != null){
+	if(previousMoistureRead != moistureReading && client != null){
 		//Change in state detected. Inform HUB
-		previousRead = reading;
+		previousMoistureRead = moistureReading;
+		previousTemperatureRead = temperatureReading;
 		//Send Sensor Feed Back to HUB
-		client.publish(
-			'T_APESCONSOLE_RD', 
-			'{"roomId": "' + deviceState.roomId + '", "deviceId": "soil-sensor", "status": ' + reading + '}'
+		publishData(
+			'{"roomId": "' 
+			+ deviceState.roomId + '", "deviceId": "garden-sensor", "status": ' 
+			+ moistureReading + ', "temperature" : "' 
+			+ temperatureReading + '"}'		
+		);
+	} else if(previousTemperatureRead != temperatureReading && client != null){
+		//Change in state detected. Inform HUB
+		previousMoistureRead = moistureReading;
+		previousTemperatureRead = temperatureReading;
+		//Send Sensor Feed Back to HUB
+		publishData(
+			'{"roomId": "' 
+			+ deviceState.roomId + '", "deviceId": "garden-sensor", "status": ' 
+			+ moistureReading + ', "temperature" : "' 
+			+ temperatureReading + '"}'		
 		);
 	}
 }
