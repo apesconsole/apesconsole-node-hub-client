@@ -10,7 +10,7 @@ var logger = require("logging_component");
 var url = require("url");
 var mqtt = require('mqtt');
 
-var mqtt_url = url.parse('tcp://m13.cloudmqtt.com:16786');
+var mqtt_url = url.parse('tcp://localhost:12345');
 
 /* PIN SET UP */
 var rpio = require('rpio');
@@ -89,11 +89,12 @@ var respond = function(message){
 	var triggerMessage = JSON.parse( message.toString());
 	var currentState = toggleDevice(triggerMessage.deviceId);
 	logger.log('Device Id:' + triggerMessage.deviceId + ', current state -' + currentState);
-	if(client != null){
+	//Prevent state update if request and GPIO state are both same
+	if(client != null triggerMessage.status != currentState){
 		//Send Device Feed Back to HUB
 		client.publish(
 			'T_APESCONSOLE_RD', 
-			'{"roomId": "' + deviceState.roomId + '", "deviceId": "' + deviceState.deviceId + '", "status": ' + currentState + '}'
+			'{"roomId": "' + triggerMessage.roomId + '", "deviceId": "' + triggerMessage.deviceId + '", "status": ' + currentState + '}'
 		);
 	}		
 }
