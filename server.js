@@ -10,7 +10,7 @@ var logger = require("logging_component");
 var url = require("url");
 var mqtt = require('mqtt');
 
-var mqtt_url = url.parse('tcp://localhost:0000');
+var mqtt_url = url.parse('tcp://m13.cloudmqtt.com:16786');
 
 /* PIN SET UP */
 var rpio = require('rpio');
@@ -102,7 +102,10 @@ var previousRead = null;
 var pollSensor = function(){
 	var reading = rpio.read(sensor);
 	logger.log('Sensor Reading: ' + reading);
+	//Prevent state update every poll
 	if(previousRead != reading && client != null){
+		//Change in state detected. Inform HUB
+		previousRead = reading;
 		//Send Sensor Feed Back to HUB
 		client.publish(
 			'T_APESCONSOLE_RD', 
