@@ -10,6 +10,8 @@ var logger = require("logging_component");
 var url = require("url");
 var mqtt = require('mqtt');
 var rpiDhtSensor = require('rpi-dht-sensor');
+var PythonShell = require('python-shell');
+var bodyParser   = require('body-parser');
 
 var mqtt_url = url.parse('tcp://m13.cloudmqtt.com:16786');
 
@@ -20,8 +22,13 @@ var options = {
         mapping: 'physical',    /* Use the P1-P40 numbering scheme */
 }
 
-var moisturesensor    = 16;
 
+app.use("/", router);
+app.use(bodyParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+
+var moisturesensor    = 16;
 var tmptr = new rpiDhtSensor.DHT11(25);
 
 
@@ -166,19 +173,15 @@ setInterval(function(){
         pollSensor();
 }, 10000);
 
-router.get("/", function(req,res){
-	res.redirect('/index');
-});
-
-router.get("/index", function(req,res){
-	res.sendFile(path + "index.html");
-});	
-
-router.get("/shut", function(req,res){
-	logger.log('Shutting Down MQTT Client!');
-	if(client != null)
-		client.end();
-	res.sendFile(path + "index.html");
+/*
+	REST API for external Access
+*/
+app.post("/updatedata", function(req, res){
+	logger.log('Node Triggered');
+	publishData(
+		'{"deviceId": "moisture_sensor", "status":' + req.body.isOptimal + ', "value" : "' + (req.body.isOptimal == 'true' ? 'Optimal' : 'Critical') + '"}'
+	);
+	res.json({});
 });
 
 http.listen(process.env.PORT || 3001, function(){				
